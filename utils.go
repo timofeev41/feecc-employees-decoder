@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -17,7 +18,7 @@ func errHandler(err error) {
 }
 
 // Returns MongoDB client
-func getMongoClient() *mongo.Client  {
+func getMongoClient() *mongo.Client {
 	sugar.Infof("Connecting to MongoDB")
 
 	uri := os.Getenv("MONGO_CONNECTION_URL")
@@ -34,8 +35,9 @@ func getMongoClient() *mongo.Client  {
 	return client
 }
 
-func getEmployeesCollection(client *mongo.Client) *mongo.Collection{
+func getEmployeesCollection(client *mongo.Client) *mongo.Collection {
 	database := os.Getenv("MONGO_DATABASE_NAME")
+	
 	if database == "" {
 		sugar.Errorf("Variable MONGO_DATABASE_NAME not set")
 		panic("MONGO_DATABASE_NAME not set")
@@ -53,3 +55,11 @@ func getLogger() *zap.Logger {
 }
 
 var sugar *zap.SugaredLogger = getLogger().Sugar()
+var employeesCollection *mongo.Collection = getEmployeesCollection(getMongoClient())
+
+func getEmployeeByRfid(rfid_card_id string) Employee {
+	var result Employee
+	err := employeesCollection.FindOne(context.TODO(), bson.D{{"rfid_card_id", rfid_card_id}}).Decode(&result)
+	errHandler(err)
+	return result
+}

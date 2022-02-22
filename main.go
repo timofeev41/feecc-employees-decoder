@@ -1,27 +1,26 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-
 type Employee struct {
-	RfidCardId string `json:"rfid_card_id"`
-	Name string `json:"name"`
-	Position string `json:"position"`
+	ID         string `bson:"_id", json:"_id"`
+	RfidCardId string `bson:"rfid_card_id", json:"rfid_card_id"`
+	Name       string `bson:"name", json:"name"`
+	Position   string `bson:"position", json:"position"`
 }
 
 func main() {
-	client := getMongoClient()
+	result := getEmployeeByRfid("smth")
 
-	employeesCollection := getEmployeesCollection(client)
+	fmt.Println(result)
 
-	var result bson.M
-	err := employeesCollection.FindOne(context.TODO(), bson.D{{"rfid_card_id", "000915495313945449"}}).Decode(&result)
-	errHandler(err)
+	var employee = Employee{}
+	bsonBytes, _ := bson.Marshal(result)
+	bson.Unmarshal(bsonBytes, &employee)
 
-	fmt.Print(result)
+	fmt.Println(employee)
 }
